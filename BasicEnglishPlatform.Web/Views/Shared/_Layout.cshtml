@@ -1,0 +1,189 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - BasicEnglishPlatform.Web</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/BasicEnglishPlatform.Web.styles.css" asp-append-version="true" />
+</head>
+<body class="">
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm fixed-top">
+            <div class="container">
+                <!-- 1. LOGO -->
+                <a class="navbar-brand fw-bold text-primary d-flex align-items-center" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-mortarboard-fill fs-4 me-2"></i>
+                    <span style="letter-spacing: -0.5px;">EnglishPlatform</span>
+                </a>
+
+                <!-- Nút Toggle cho Mobile -->
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Nội dung Menu -->
+                <div class="collapse navbar-collapse" id="navbarContent">
+
+                    <!-- 2. MENU CHÍNH (Căn trái) -->
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                        <!-- Link chung cho mọi người -->
+                        <li class="nav-item">
+                            <a class="nav-link text-dark fw-medium" asp-controller="Course" asp-action="Index">
+                                <i class="bi bi-grid-3x3-gap"></i> Tất cả khóa học
+                            </a>
+                        </li>
+
+                        <!-- Menu dành cho SINH VIÊN -->
+                        @if (User.IsInRole("Student"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark fw-medium" asp-controller="Student" asp-action="MyCourses">
+                                    <i class="bi bi-journal-bookmark-fill text-success"></i> Khóa học của tôi
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark fw-medium" asp-controller="Schedule" asp-action="Index">
+                                    <i class="bi bi-calendar3 text-primary"></i> Lịch học
+                                </a>
+                            </li>
+                        }
+
+                        <!-- Menu dành cho ADMIN -->
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-danger fw-bold" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-gear-fill"></i> Quản trị
+                                </a>
+                                <ul class="dropdown-menu border-0 shadow" aria-labelledby="adminDropdown">
+                                    <li><a class="dropdown-item" asp-controller="Course" asp-action="Create"><i class="bi bi-plus-circle"></i> Tạo khóa học mới</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Course" asp-action="Manage"><i class="bi bi-list-ul"></i> Quản lý khóa học</a></li>
+
+                                    <!-- THÊM DÒNG NÀY -->
+                                    <li><a class="dropdown-item" asp-controller="Admin" asp-action="Students"><i class="bi bi-people"></i> Quản lý học viên</a></li>
+
+                                    <li><hr class="dropdown-divider"></li>
+                                </ul>
+                            </li>
+                        }
+                    </ul>
+
+                    <!-- 3. KHU VỰC TÀI KHOẢN (Căn phải) -->
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center gap-2">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <!-- Khi ĐÃ Đăng nhập -->
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle d-flex align-items-center text-dark" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <!-- Avatar giả lập -->
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px; font-weight: bold;">
+                                        @User.Identity.Name?.Substring(0, 1).ToUpper()
+                                    </div>
+                                    <span class="fw-medium">@User.Identity.Name</span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow" aria-labelledby="userDropdown">
+                                    <li>
+                                        <div class="px-3 py-2">
+                                            <div class="fw-bold">@User.Identity.Name</div>
+                                            <div class="small text-muted">@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</div>
+                                        </div>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    @if (User.IsInRole("Student"))
+                                    {
+                                        <li><a class="dropdown-item" asp-controller="Student" asp-action="MyCourses">Khóa học của tôi</a></li>
+                                    }
+                                    <li><a class="dropdown-item" href="#">Hồ sơ cá nhân</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" asp-controller="Account" asp-action="Logout">
+                                            <i class="bi bi-box-arrow-right"></i> Đăng xuất
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                        else
+                        {
+                            <!-- Khi CHƯA Đăng nhập -->
+                            <li class="nav-item">
+                                <a class="btn btn-outline-primary fw-bold px-4 rounded-pill" asp-controller="Account" asp-action="Login">Đăng nhập</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="btn btn-primary fw-bold px-4 rounded-pill" asp-controller="Account" asp-action="Register">Đăng ký</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container flex-grow-1 min-vh-100">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted bg-light mt-auto py-4 position-relative">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <h5 class="text-dark fw-bold"><i class="bi bi-mortarboard-fill"></i> EnglishPlatform</h5>
+                    <p class="small text-wrap">Nền tảng học tiếng Anh trực tuyến hàng đầu với sự hỗ trợ của công nghệ AI tiên tiến.</p>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <h6 class="text-dark fw-bold">Khám phá</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="#" class="text-decoration-none text-muted">Trang chủ</a></li>
+                        <li><a href="#" class="text-decoration-none text-muted">Khóa học</a></li>
+                        <li><a href="#" class="text-decoration-none text-muted">Blog</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <h6 class="text-dark fw-bold">Hỗ trợ</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="#" class="text-decoration-none text-muted">Trung tâm trợ giúp</a></li>
+                        <li><a href="#" class="text-decoration-none text-muted">Điều khoản</a></li>
+                        <li><a href="#" class="text-decoration-none text-muted">Bảo mật</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h6 class="text-dark fw-bold">Liên hệ</h6>
+                    <p class="small mb-1"><i class="bi bi-geo-alt"></i> Hà Nội, Việt Nam</p>
+                    <p class="small mb-1"><i class="bi bi-envelope"></i> contact@englishplatform.com</p>
+                    <div class="mt-2">
+                        <a href="#" class="me-2 text-primary"><i class="bi bi-facebook fs-5"></i></a>
+                        <a href="#" class="me-2 text-danger"><i class="bi bi-youtube fs-5"></i></a>
+                        <a href="#" class="text-info"><i class="bi bi-twitter fs-5"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center pt-3 border-top small">
+                &copy; 2024 - EnglishPlatform - Built with ASP.NET Core & Gemini AI
+            </div>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+    @if (User.Identity.IsAuthenticated)
+    {
+        <partial name="_ChatWidget" />
+    }
+    <partial name="_Notification" />
+
+</body>
+</html>
+
+<style>
+    body {
+        padding-top: 70px; /* Chiều cao của Navbar */
+    }
+
+    .dropdown-item:active {
+        background-color: #0d6efd;
+    }
+</style>

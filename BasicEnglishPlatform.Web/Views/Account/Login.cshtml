@@ -1,0 +1,43 @@
+﻿@model BasicEnglishPlatform.Web.Models.LoginViewModel
+
+@{
+    ViewData["Title"] = "Đăng Nhập";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white text-center">
+                <h3>Đăng Nhập</h3>
+            </div>
+            <div class="card-body">
+                <form asp-action="Login" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input asp-for="Email" class="form-control" placeholder="admin@school.com" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Mật khẩu</label>
+                        <input asp-for="Password" class="form-control" placeholder="Mật khẩu" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Đăng Nhập</button>
+                </form>
+            </div>
+            <div class="card-footer text-center">
+                <small>Tài khoản Admin: admin@school.com / admin123</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

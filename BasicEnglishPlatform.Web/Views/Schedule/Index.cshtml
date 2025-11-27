@@ -1,0 +1,131 @@
+﻿@{
+    ViewData["Title"] = "Lịch học cá nhân";
+}
+
+<!-- FullCalendar CSS -->
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/main.min.css' rel='stylesheet' />
+
+<style>
+    /* Notion-like Styles */
+    :root {
+        --fc-border-color: #e0e0e0;
+        --fc-today-bg-color: #f7f7f5; /* Màu nền hôm nay kiểu Notion */
+    }
+
+    .fc {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+    }
+
+    /* Header Lịch */
+    .fc-toolbar-title {
+        font-weight: 700;
+        font-size: 1.5rem !important;
+        color: #37352f;
+    }
+
+    .fc-button-primary {
+        background-color: white !important;
+        border: 1px solid #e0e0e0 !important;
+        color: #37352f !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        transition: background 0.2s;
+    }
+
+        .fc-button-primary:hover {
+            background-color: #efefef !important;
+        }
+
+    .fc-button-active {
+        background-color: #e0e0e0 !important;
+    }
+
+    /* Sự kiện (Cục màu) */
+    .fc-event {
+        border: none !important;
+        border-radius: 4px;
+        padding: 2px 4px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    /* Grid */
+    .fc-col-header-cell {
+        background-color: #f7f7f5;
+        padding: 10px 0;
+        color: #787774;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold"><i class="bi bi-calendar-week"></i> Thời khóa biểu</h2>
+            <p class="text-muted">Xem lịch học hàng tuần của bạn</p>
+        </div>
+        <a asp-controller="Student" asp-action="MyCourses" class="btn btn-outline-secondary">
+            <i class="bi bi-list-ul"></i> Xem dạng danh sách
+        </a>
+    </div>
+
+    <!-- Nơi hiển thị lịch -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <div id='calendar'></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- FullCalendar JS -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+
+    <!-- SweetAlert2 (Để hiện chi tiết khi bấm vào lịch) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'timeGridWeek', // Mặc định xem theo Tuần (có giờ)
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                locale: 'vi', // Tiếng Việt
+                firstDay: 1, // Bắt đầu từ Thứ 2
+                slotMinTime: "07:00:00", // Giờ bắt đầu hiển thị trong ngày
+                slotMaxTime: "22:00:00", // Giờ kết thúc
+                allDaySlot: false, // Ẩn dòng "Cả ngày"
+                height: 'auto',
+
+                // Lấy dữ liệu từ API
+                events: '/Schedule/GetEvents',
+
+                // Khi bấm vào sự kiện
+                eventClick: function(info) {
+                    Swal.fire({
+                        title: info.event.title,
+                                html: `
+            <div class="text-start">
+                <p><strong>📅 Thời gian:</strong> ${info.event.extendedProps.dateRange}</p> <!-- Thêm dòng này -->
+                <p><strong>🕒 Giờ học:</strong> ${info.event.start.toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'})} - ${info.event.end.toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'})}</p>
+                <p><strong>📍 Phòng học:</strong> ${info.event.extendedProps.room}</p>
+            </div>
+        `,
+                        icon: 'info',
+                        confirmButtonText: 'Đóng'
+                    });
+                }
+            });
+
+            calendar.render();
+        });
+    </script>
+}

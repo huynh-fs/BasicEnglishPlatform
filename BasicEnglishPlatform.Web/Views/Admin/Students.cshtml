@@ -1,0 +1,80 @@
+﻿@model IEnumerable<BasicEnglishPlatform.Data.Entities.Student>
+
+@{
+    ViewData["Title"] = "Quản lý Học viên";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-primary"><i class="bi bi-people-fill"></i> Quản lý Học viên</h2>
+            <p class="text-muted">Danh sách sinh viên đang hoạt động trên hệ thống</p>
+        </div>
+        <!-- Có thể thêm nút Export Excel ở đây -->
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-secondary">
+                    <tr>
+                        <th class="ps-4">Mã SV</th>
+                        <th>Họ và Tên</th>
+                        <th>Email</th>
+                        <th>Năm nhập học</th>
+                        <th>Số khóa học</th>
+                        <th class="text-end pe-4">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="ps-4 fw-bold text-primary">@item.StudentCode</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <!-- Avatar tự tạo từ tên -->
+                                    <div class="rounded-circle bg-secondary bg-opacity-10 text-secondary d-flex align-items-center justify-content-center me-2"
+                                         style="width: 35px; height: 35px; font-weight: bold;">
+                                        @item.FullName.Substring(0, 1).ToUpper()
+                                    </div>
+                                    @item.FullName
+                                </div>
+                            </td>
+                            <td>@item.Email</td>
+                            <td>@item.Year</td>
+                            <td>
+                                @if (item.Enrollments != null && item.Enrollments.Count > 0)
+                                {
+                                    <span class="badge bg-success">@item.Enrollments.Count khóa</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Chưa học</span>
+                                }
+                            </td>
+                            <td class="text-end pe-4">
+                                <a asp-action="StudentDetails" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info" title="Xem hồ sơ">
+                                    <i class="bi bi-eye">Xem</i>
+                                </a>
+
+                                <!-- Form xóa (Dùng form để tránh CSRF) -->
+                                <form asp-action="DeleteStudent" asp-route-id="@item.Id" method="post" class="d-inline"
+                                      onsubmit="return confirm('CẢNH BÁO: Xóa học viên sẽ xóa toàn bộ lịch sử học tập của họ. Bạn có chắc chắn không?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa">
+                                        <i class="bi bi-trash">Xóa</i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

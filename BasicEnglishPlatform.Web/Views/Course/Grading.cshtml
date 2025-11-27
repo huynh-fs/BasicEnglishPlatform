@@ -1,0 +1,118 @@
+﻿@model IEnumerable<BasicEnglishPlatform.Data.Entities.Enrollment>
+
+@{
+    ViewData["Title"] = "Nhập điểm: " + ViewData["CourseTitle"];
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-primary"><i class="bi bi-pencil-square"></i> Nhập điểm</h2>
+            <h5 class="text-muted">Khóa học: @ViewData["CourseTitle"]</h5>
+        </div>
+        <a asp-action="Manage" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Quay lại
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-secondary">
+                    <tr>
+                        <th class="ps-4">Mã SV</th>
+                        <th>Họ và Tên</th>
+                        <th>Email</th>
+                        <th>Ngày đăng ký</th>
+                        <th style="width: 200px;">Điểm số (0-10)</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="ps-4 fw-bold">@item.Student.StudentCode</td>
+                                <td>@item.Student.FullName</td>
+                                <td>@item.Student.Email</td>
+                                <td>@item.RegisteredAt.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" step="0.1" min="0" max="10"
+                                               class="form-control grade-input"
+                                               id="grade-@item.Id"
+                                               value="@(item.Grade.HasValue? item.Grade.Value.ToString() : "")"
+                                               placeholder="Nhập điểm..." />
+                                        <button class="btn btn-primary" onclick="saveGrade(@item.Id)">
+                                            <i class="bi bi-save"></i> Lưu
+                                        </button>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span id="status-@item.Id" class="badge bg-secondary">
+                                        @(item.Grade.HasValue ? "Đã có điểm" : "Chưa nhập")
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                Chưa có sinh viên nào đăng ký khóa học này.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Cấu hình Toast thông báo nhỏ góc phải
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true
+        });
+
+        function saveGrade(enrollmentId) {
+            var input = document.getElementById('grade-' + enrollmentId);
+            var gradeValue = input.value;
+            var statusBadge = document.getElementById('status-' + enrollmentId);
+
+            if (gradeValue === '' || gradeValue < 0 || gradeValue > 10) {
+                Toast.fire({ icon: 'warning', title: 'Điểm số không hợp lệ (0-10)' });
+                return;
+            }
+
+            // Gọi AJAX lên Server
+            $.post('/Course/UpdateGrade', { enrollmentId: enrollmentId, grade: gradeValue })
+                .done(function (response) {
+                    if (response.success) {
+                        // Thông báo thành công
+                        Toast.fire({ icon: 'success', title: response.message });
+
+                        // Cập nhật giao diện
+                        statusBadge.className = 'badge bg-success';
+                        statusBadge.innerText = 'Đã lưu: ' + gradeValue;
+                        input.classList.add('is-valid');
+                        setTimeout(() => input.classList.remove('is-valid'), 2000);
+                    } else {
+                        Toast.fire({ icon: 'error', title: response.message });
+                    }
+                })
+                .fail(function () {
+                    Toast.fire({ icon: 'error', title: 'Lỗi kết nối server' });
+                });
+        }
+    </script>
+}

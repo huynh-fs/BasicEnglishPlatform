@@ -1,0 +1,79 @@
+﻿@model BasicEnglishPlatform.Data.Entities.Student
+
+@{
+    ViewData["Title"] = "Hồ sơ học viên";
+}
+
+<div class="container mt-4">
+    <a asp-action="Students" class="btn btn-outline-secondary mb-3"><i class="bi bi-arrow-left"></i> Quay lại danh sách</a>
+
+    <div class="row">
+        <!-- Cột trái: Thông tin cá nhân -->
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 text-center p-4">
+                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3"
+                     style="width: 100px; height: 100px; font-size: 40px; font-weight: bold;">
+                    @Model.FullName.Substring(0, 1).ToUpper()
+                </div>
+                <h4>@Model.FullName</h4>
+                <p class="text-muted">@Model.StudentCode</p>
+                <hr />
+                <div class="text-start">
+                    <p><i class="bi bi-envelope me-2"></i> @Model.Email</p>
+                    <p><i class="bi bi-calendar me-2"></i> Nhập học: @Model.Year</p>
+                    <p><i class="bi bi-shield-lock me-2"></i> Vai trò: @Model.Role</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột phải: Lịch sử học tập -->
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3">
+                    <h5 class="m-0 fw-bold text-primary">📚 Các khóa học đã đăng ký</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Enrollments != null && Model.Enrollments.Any())
+                    {
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Tên khóa học</th>
+                                    <th>Ngày đăng ký</th>
+                                    <th>Điểm số</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.Enrollments)
+                                {
+                                    <tr>
+                                        <td>
+                                            <a asp-controller="Course" asp-action="Details" asp-route-id="@item.CourseId" class="text-decoration-none">
+                                                @item.Course?.Title
+                                            </a>
+                                        </td>
+                                        <td>@item.RegisteredAt.ToString("dd/MM/yyyy")</td>
+                                        <td>
+                                            @if (item.Grade.HasValue)
+                                            {
+                                                <span class="fw-bold text-success">@item.Grade</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted fst-italic">Chưa có điểm</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center py-4">Học viên này chưa đăng ký khóa học nào.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,141 @@
+﻿@model BasicEnglishPlatform.Web.Models.CourseCreateViewModel
+
+@{
+    ViewData["Title"] = "Tạo Khóa Học";
+}
+
+<div class="container">
+    <h2>Tạo Khóa Học Mới</h2>
+    <form asp-action="Create" enctype="multipart/form-data" method="post">
+        <div class="row">
+            <!-- Cột trái: Thông tin chung -->
+            <div class="col-md-6">
+                <div class="card p-3 mb-3">
+                    <h5 class="card-title">Thông tin cơ bản</h5>
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label">Tên khóa học</label>
+                        <input asp-for="Title" class="form-control" />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Price" class="form-label">Giá tiền (VNĐ)</label>
+                        <input asp-for="Price" class="form-control" type="number" />
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="StartDate" class="form-label">Ngày bắt đầu</label>
+                            <input asp-for="StartDate" class="form-control" type="date" />
+                            <span asp-validation-for="StartDate" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="EndDate" class="form-label">Ngày kết thúc</label>
+                            <input asp-for="EndDate" class="form-control" type="date" />
+                            <span asp-validation-for="EndDate" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="MaxCapacity" class="form-label">Sĩ số tối đa</label>
+                        <input asp-for="MaxCapacity" class="form-control" type="number" />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="CoverImage" class="form-label">Ảnh bìa</label>
+                        <input asp-for="CoverImage" class="form-control" type="file" accept="image/*" />
+                        <span asp-validation-for="CoverImage" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label">Mô tả</label>
+                        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cột phải: Lịch học (Dynamic List) -->
+            <div class="col-md-6">
+                <div class="card p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title m-0">Lịch học</h5>
+                        <button type="button" class="btn btn-sm btn-secondary" onclick="addSchedule()">+ Thêm buổi</button>
+                    </div>
+
+                    <div id="schedule-container">
+                        <!-- JavaScript sẽ render các dòng vào đây -->
+                        @for (int i = 0; i < Model.Schedules.Count; i++)
+                        {
+                            <div class="schedule-item border p-2 mb-2 rounded bg-light">
+                                <div class="row g-2">
+                                    <div class="col-4">
+                                        <label class="small">Thứ</label>
+                                        <select name="Schedules[@i].DayOfWeek" class="form-select form-select-sm" asp-items="Html.GetEnumSelectList<DayOfWeek>()"></select>
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="small">Bắt đầu</label>
+                                        <input name="Schedules[@i].StartTime" type="time" class="form-control form-control-sm" value="@Model.Schedules[i].StartTime" />
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="small">Kết thúc</label>
+                                        <input name="Schedules[@i].EndTime" type="time" class="form-control form-control-sm" value="@Model.Schedules[i].EndTime" />
+                                    </div>
+                                    <div class="col-12 mt-1">
+                                        <input name="Schedules[@i].Room" class="form-control form-control-sm"
+                                               placeholder="Phòng học / Link Zoom" value="@Model.Schedules[i].Room" required />
+                                        <span asp-validation-for="Schedules[@i].Room" class="text-danger small"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary btn-lg">Lưu Khóa Học</button>
+            <a asp-action="Index" class="btn btn-secondary btn-lg">Hủy</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        function addSchedule() {
+            // Đếm số lượng item hiện tại để tính index tiếp theo (Schedules[0], Schedules[1]...)
+            var index = document.querySelectorAll('.schedule-item').length;
+
+            var html = `
+                <div class="schedule-item border p-2 mb-2 rounded bg-light">
+                    <div class="row g-2">
+                        <div class="col-4">
+                            <label class="small">Thứ</label>
+                            <select name="Schedules[${index}].DayOfWeek" class="form-select form-select-sm">
+                                <option value="1">Monday</option>
+                                <option value="2">Tuesday</option>
+                                <option value="3">Wednesday</option>
+                                <option value="4">Thursday</option>
+                                <option value="5">Friday</option>
+                                <option value="6">Saturday</option>
+                                <option value="0">Sunday</option>
+                            </select>
+                        </div>
+                        <div class="col-4">
+                            <label class="small">Bắt đầu</label>
+                            <input name="Schedules[${index}].StartTime" type="time" class="form-control form-control-sm" value="18:00" />
+                        </div>
+                        <div class="col-4">
+                            <label class="small">Kết thúc</label>
+                            <input name="Schedules[${index}].EndTime" type="time" class="form-control form-control-sm" value="20:00" />
+                        </div>
+                        <div class="col-12 mt-1">
+                            <input name="Schedules[${index}].Room" class="form-control form-control-sm" placeholder="Phòng học / Link Zoom" required />
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('schedule-container').insertAdjacentHTML('beforeend', html);
+        }
+    </script>
+}

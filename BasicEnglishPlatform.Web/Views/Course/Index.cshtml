@@ -1,0 +1,69 @@
+﻿@model IEnumerable<BasicEnglishPlatform.Data.Entities.Course>
+
+@{
+    ViewData["Title"] = "Tất cả Khóa học";
+}
+
+<div class="container mt-4">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold">Khám phá các khóa học</h2>
+        <p class="text-muted">Nâng cao kỹ năng tiếng Anh của bạn ngay hôm nay</p>
+    </div>
+
+    <div class="row">
+        @foreach (var item in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm border-0 hover-effect">
+                    <!-- Ảnh bìa -->
+                    <a asp-action="Details" asp-route-id="@item.Id" class="position-relative overflow-hidden">
+                        <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "https://via.placeholder.com/400x250" : item.ImageUrl)"
+                             class="card-img-top" style="height: 220px; object-fit: cover;">
+                        @if (item.Price == 0)
+                        {
+                            <span class="badge bg-success position-absolute top-0 end-0 m-3 shadow">Miễn phí</span>
+                        }
+                    </a>
+
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold">
+                            <a asp-action="Details" asp-route-id="@item.Id" class="text-decoration-none text-dark">
+                                @item.Title
+                            </a>
+                        </h5>
+                        <p class="card-text text-muted small">
+                            @(item.Description != null && item.Description.Length > 100 ? item.Description.Substring(0, 100) + "..." : item.Description)
+                        </p>
+                        <div class="small text-muted">
+                            <i class="bi bi-people-fill"></i>
+                            <!-- Dùng toán tử ?. để tránh null -->
+                            @(item.Enrollments?.Count ?? 0) / @item.MaxCapacity học viên
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div class="small text-muted">
+                                <i class="bi bi-clock"></i> @item.Schedules.Count buổi/tuần
+                            </div>
+                            <div class="fw-bold text-primary fs-5">
+                                @(item.Price == 0 ? "Free" : item.Price.ToString("#,##0") + " đ")
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-top-0 pb-3">
+                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-primary w-100 rounded-pill">Xem chi tiết</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .hover-effect {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .hover-effect:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+        }
+</style>

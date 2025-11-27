@@ -1,0 +1,37 @@
+﻿<!-- Thư viện SweetAlert2 (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    // Cấu hình chung cho Toast (Thông báo nổi góc phải)
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer)
+            toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+    });
+</script>
+
+@if (TempData["Success"] != null)
+{
+    <script>
+        Toast.fire({
+            icon: 'success',
+            title: '@TempData["Success"]'
+        })
+    </script>
+}
+
+@if (TempData["Error"] != null)
+{
+    <script>
+        Toast.fire({
+            icon: 'error',
+            title: '@TempData["Error"]'
+        })
+    </script>
+}

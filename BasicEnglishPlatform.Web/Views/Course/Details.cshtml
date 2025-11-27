@@ -1,0 +1,97 @@
+﻿@model BasicEnglishPlatform.Data.Entities.Course
+
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Cột trái: Ảnh và Thông tin chính -->
+        <div class="col-md-8">
+            <img src="@(string.IsNullOrEmpty(Model.ImageUrl) ? "https://via.placeholder.com/800x400" : Model.ImageUrl)"
+                 class="img-fluid rounded shadow-sm mb-4 w-100" style="max-height: 400px; object-fit: cover;" />
+
+            <h1 class="mb-3">@Model.Title</h1>
+
+            <div class="mb-4">
+                <h4>Mô tả khóa học</h4>
+                <p class="lead">@Model.Description</p>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="m-0">📅 Lịch học chi tiết</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Schedules.Any())
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var sch in Model.Schedules)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>
+                                        <strong>@sch.DayOfWeek.ToVietnamese()</strong>
+                                        (@sch.DayOfWeek)
+                                    </span>
+                                    <span class="badge bg-info text-dark">
+                                        @sch.StartTime.ToString(@"hh\:mm") - @sch.EndTime.ToString(@"hh\:mm")
+                                    </span>
+                                    <span class="text-muted small"><i class="bi bi-geo-alt"></i> @sch.Room</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Chưa có lịch học cụ thể.</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột phải: Box Đăng ký (Sticky) -->
+        <div class="col-md-4">
+            <div class="card shadow border-0 sticky-top" style="top: 20px;">
+                <div class="card-body">
+                    <h3 class="text-primary fw-bold text-center mb-3">
+                        @(Model.Price == 0 ? "Miễn phí" : Model.Price.ToString("#,##0") + " đ")
+                    </h3>
+
+                    <hr />
+
+                    <ul class="list-unstyled mb-4">
+                        <li class="mb-2">
+                            <i class="bi bi-people-fill text-secondary"></i>
+                            Sĩ số: @(Model.Enrollments?.Count ?? 0) / @Model.MaxCapacity
+                        </li>
+                        <li class="mb-2"><i class="bi bi-clock-fill text-secondary"></i> Thời lượng: @Model.Schedules.Count buổi/tuần</li>
+                        <li class="mb-2"><i class="bi bi-globe text-secondary"></i> Hình thức: Offline/Online</li>
+                        <li class="mb-2">
+                            <i class="bi bi-calendar-range text-secondary"></i>
+                            @Model.StartDate.ToString("dd/MM/yyyy") - @Model.EndDate.ToString("dd/MM/yyyy")
+                        </li>
+                    </ul>
+
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        if (User.IsInRole("Student"))
+                        {
+                            <form asp-controller="Student" asp-action="Register" method="post">
+                                <input type="hidden" name="courseId" value="@Model.Id" />
+                                <button type="submit" class="btn btn-danger w-100 btn-lg">Đăng Ký Ngay</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <button class="btn btn-secondary w-100" disabled>Admin Mode</button>
+                        }
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path" class="btn btn-primary w-100 btn-lg">Đăng nhập để học</a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
