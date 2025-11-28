@@ -1,0 +1,131 @@
+﻿@{
+    ViewData["Title"] = "Luyện tập Trắc nghiệm AI";
+}
+
+<div class="container mt-5">
+    <div class="card shadow-lg mx-auto" style="max-width: 700px;">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="m-0"><i class="bi bi-joystick"></i> AI Quiz Arena</h4>
+            <select id="topic-select" class="form-select form-select-sm w-auto text-dark">
+                <option value="Grammar">Ngữ pháp (Grammar)</option>
+                <option value="Vocabulary">Từ vựng (Vocabulary)</option>
+                <option value="Idioms">Thành ngữ (Idioms)</option>
+                <option value="IELTS Reading">IELTS Reading</option>
+            </select>
+        </div>
+
+        <div class="card-body p-4">
+            <!-- Loading Spinner -->
+            <div id="loading-area" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2 text-muted">AI đang soạn câu hỏi...</p>
+            </div>
+
+            <!-- Khu vực câu hỏi -->
+            <div id="quiz-area" style="display:none;">
+                <h5 class="card-title mb-4" id="question-text">Question goes here?</h5>
+
+                <div class="list-group mb-4" id="options-list">
+                    <!-- Các đáp án sẽ được render vào đây -->
+                </div>
+
+                <!-- Khu vực kết quả (Ẩn mặc định) -->
+                <div id="result-area" class="alert" style="display:none;">
+                    <h5 id="result-title" class="fw-bold"></h5>
+                    <p id="result-explanation"></p>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <button id="btn-next" class="btn btn-primary btn-lg px-4" onclick="loadQuestion()" style="display:none;">
+                        Câu tiếp theo <i class="bi bi-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentQuiz = null;
+
+        $(document).ready(function() {
+            loadQuestion(); // Load câu đầu tiên khi vào trang
+
+            $('#topic-select').change(function() {
+                loadQuestion(); // Load lại khi đổi chủ đề
+            });
+        });
+
+        function loadQuestion() {
+            // Reset UI
+            $('#loading-area').show();
+            $('#quiz-area').hide();
+            $('#result-area').hide().removeClass('alert-success alert-danger');
+            $('#btn-next').hide();
+            $('#options-list').empty();
+
+            const topic = $('#topic-select').val();
+
+            // Gọi API lấy câu hỏi
+            $.ajax({
+                url: '/Quiz/GetNewQuestion',
+                type: 'GET',
+                data: { topic: topic },
+                success: function(data) {
+                    currentQuiz = data;
+                    renderQuiz(data);
+                },
+                error: function() {
+                    alert('Không thể tạo câu hỏi lúc này. Vui lòng thử lại.');
+                    $('#loading-area').hide();
+                }
+            });
+        }
+
+        function renderQuiz(data) {
+            $('#loading-area').hide();
+            $('#quiz-area').fadeIn();
+            $('#question-text').text(data.question);
+
+            // Render các đáp án
+            data.options.forEach((opt, index) => {
+                const btn = $(`<button type="button" class="list-group-item list-group-item-action py-3 option-btn">${opt}</button>`);
+
+                btn.click(function() {
+                    checkAnswer($(this), opt);
+                });
+
+                $('#options-list').append(btn);
+            });
+        }
+
+        function checkAnswer(btnElement, selectedAnswer) {
+            // Disable tất cả các nút để không chọn lại
+            $('.option-btn').prop('disabled', true);
+
+            const isCorrect = selectedAnswer === currentQuiz.correctAnswer;
+
+            if (isCorrect) {
+                btnElement.addClass('list-group-item-success bg-success text-white');
+                $('#result-area').addClass('alert-success').show();
+                $('#result-title').html('<i class="bi bi-check-circle-fill"></i> Chính xác!');
+            } else {
+                btnElement.addClass('list-group-item-danger bg-danger text-white');
+
+                // Highlight đáp án đúng
+                $('.option-btn').each(function() {
+                    if ($(this).text() === currentQuiz.correctAnswer) {
+                        $(this).addClass('list-group-item-success bg-success text-white');
+                    }
+                });
+
+                $('#result-area').addClass('alert-danger').show();
+                $('#result-title').html('<i class="bi bi-x-circle-fill"></i> Sai rồi!');
+            }
+
+            $('#result-explanation').text(currentQuiz.explanation);
+            $('#btn-next').show(); // Hiện nút Next
+        }
+    </script>
+}

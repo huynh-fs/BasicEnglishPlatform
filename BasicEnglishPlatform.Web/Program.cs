@@ -22,18 +22,17 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-    // Log để debug (Render sẽ hiện cái này trong tab Logs)
-    Console.WriteLine($"[DEBUG] Raw ConnectionString: {connectionString}");
+    // Kiểm tra biến môi trường DATABASE_URL (Chỉ có trên Render)
+    var renderDbUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 
-    // Kiểm tra xem có phải dạng URL không (chấp nhận cả postgres:// và postgresql://)
-    if (!string.IsNullOrEmpty(connectionString) &&
-       (connectionString.StartsWith("postgres://") || connectionString.StartsWith("postgresql://")))
+    if (!string.IsNullOrEmpty(renderDbUrl))
     {
+        // --- MÔI TRƯỜNG RENDER (PostgreSQL) ---
+        Console.WriteLine("Using PostgreSQL (Render)");
         try
         {
-            var databaseUri = new Uri(connectionString);
+            var databaseUri = new Uri(renderDbUrl);
             var userInfo = databaseUri.UserInfo.Split(':');
-
             var builderDb = new NpgsqlConnectionStringBuilder
             {
                 Host = databaseUri.Host,
@@ -44,19 +43,16 @@ builder.Services.AddDbContext<AppDbContext>(options =>
                 SslMode = SslMode.Require,
                 TrustServerCertificate = true
             };
-
-            connectionString = builderDb.ToString();
-            Console.WriteLine($"[DEBUG] Parsed ConnectionString: Host={builderDb.Host}; Database={builderDb.Database}");
+            options.UseNpgsql(builderDb.ToString(), o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
         }
-        catch (Exception ex)
-        {
-            // Ném lỗi ra để biết đường sửa nếu parse sai
-            throw new Exception($"Lỗi parse connection string: {ex.Message}");
-        }
+        catch (Exception ex) { throw new Exception($"Lỗi parse Render DB: {ex.Message}"); }
     }
-
-    // Cấu hình Npgsql và Split Query (để fix warning hiệu năng)
-    options.UseNpgsql(connectionString, o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
+    else
+    {
+        // --- MÔI TRƯỜNG LOCAL (SQL Server) ---
+        Console.WriteLine("Using SQL Server (Local)");
+        options.UseSqlServer(connectionString);
+    }
 });
 
 
