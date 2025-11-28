@@ -20,44 +20,41 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-    // Log ra console để debug (nhớ che password nếu log thật)
-    Console.WriteLine($"[DEBUG] Original ConnectionString: {connectionString}");
+    // Log để debug (Render sẽ hiện cái này trong tab Logs)
+    Console.WriteLine($"[DEBUG] Raw ConnectionString: {connectionString}");
 
-    // Kiểm tra nếu là dạng URL (Render)
-    if (!string.IsNullOrEmpty(connectionString) && connectionString.StartsWith("postgres://"))
+    // Kiểm tra xem có phải dạng URL không (chấp nhận cả postgres:// và postgresql://)
+    if (!string.IsNullOrEmpty(connectionString) &&
+       (connectionString.StartsWith("postgres://") || connectionString.StartsWith("postgresql://")))
     {
         try
         {
             var databaseUri = new Uri(connectionString);
             var userInfo = databaseUri.UserInfo.Split(':');
 
-            // Giải mã URL cho password (quan trọng nếu pass có ký tự đặc biệt)
-            var username = userInfo[0];
-            var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
-
             var builderDb = new NpgsqlConnectionStringBuilder
             {
                 Host = databaseUri.Host,
                 Port = databaseUri.Port,
-                Username = username,
-                Password = password,
+                Username = userInfo[0],
+                Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "",
                 Database = databaseUri.AbsolutePath.TrimStart('/'),
                 SslMode = SslMode.Require,
                 TrustServerCertificate = true
             };
 
             connectionString = builderDb.ToString();
-            Console.WriteLine($"[DEBUG] Parsed ConnectionString: Host={builderDb.Host};Database={builderDb.Database};...");
+            Console.WriteLine($"[DEBUG] Parsed ConnectionString: Host={builderDb.Host}; Database={builderDb.Database}");
         }
         catch (Exception ex)
         {
-            // Nếu parse lỗi, ném exception luôn để app dừng lại và báo lỗi rõ ràng
-            // Thay vì nuốt lỗi và để Npgsql báo lỗi khó hiểu
-            throw new Exception($"Không thể parse connection string của Render. Lỗi: {ex.Message}");
+            // Ném lỗi ra để biết đường sửa nếu parse sai
+            throw new Exception($"Lỗi parse connection string: {ex.Message}");
         }
     }
 
-    options.UseNpgsql(connectionString);
+    // Cấu hình Npgsql và Split Query (để fix warning hiệu năng)
+    options.UseNpgsql(connectionString, o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
 });
 
 
