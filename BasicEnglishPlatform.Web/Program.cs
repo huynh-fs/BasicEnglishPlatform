@@ -7,6 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using System.Security.Authentication;
 
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 //builder.Services.AddDbContext<AppDbContext>(options =>
