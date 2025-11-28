@@ -1,9 +1,10 @@
-using BasicEnglishPlatform.Data;
+﻿using BasicEnglishPlatform.Data;
 using BasicEnglishPlatform.Data.Repositories;
 using BasicEnglishPlatform.Services.Implementations;
 using BasicEnglishPlatform.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using System.Security.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,23 +20,40 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-    // Ki?m tra xem connection string c? ph?i l? d?ng URI (c?a Render) kh?ng
-    // D?u hi?u: B?t ??u b?ng "postgres://"
-    if (connectionString != null && connectionString.StartsWith("postgres://"))
+    // Log ra console để debug (nhớ che password nếu log thật)
+    Console.WriteLine($"[DEBUG] Original ConnectionString: {connectionString}");
+
+    // Kiểm tra nếu là dạng URL (Render)
+    if (!string.IsNullOrEmpty(connectionString) && connectionString.StartsWith("postgres://"))
     {
         try
         {
             var databaseUri = new Uri(connectionString);
             var userInfo = databaseUri.UserInfo.Split(':');
 
-            // Chuy?n ??i sang ??nh d?ng chu?n c?a Npgsql
-            // L?u ?: Render y?u c?u SSL, n?n c?n SslMode=Require v? Trust Server Certificate=true
-            connectionString = $"Host={databaseUri.Host};Port={databaseUri.Port};Database={databaseUri.AbsolutePath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};SslMode=Require;Trust Server Certificate=true;";
+            // Giải mã URL cho password (quan trọng nếu pass có ký tự đặc biệt)
+            var username = userInfo[0];
+            var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
+
+            var builderDb = new NpgsqlConnectionStringBuilder
+            {
+                Host = databaseUri.Host,
+                Port = databaseUri.Port,
+                Username = username,
+                Password = password,
+                Database = databaseUri.AbsolutePath.TrimStart('/'),
+                SslMode = SslMode.Require,
+                TrustServerCertificate = true
+            };
+
+            connectionString = builderDb.ToString();
+            Console.WriteLine($"[DEBUG] Parsed ConnectionString: Host={builderDb.Host};Database={builderDb.Database};...");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"L?i khi parse connection string c?a Render: {ex.Message}");
-            // C? th? throw ho?c ?? nguy?n ?? n? b?o l?i g?c
+            // Nếu parse lỗi, ném exception luôn để app dừng lại và báo lỗi rõ ràng
+            // Thay vì nuốt lỗi và để Npgsql báo lỗi khó hiểu
+            throw new Exception($"Không thể parse connection string của Render. Lỗi: {ex.Message}");
         }
     }
 
