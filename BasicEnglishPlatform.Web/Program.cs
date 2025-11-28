@@ -8,10 +8,37 @@ using System.Security.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
+//builder.Services.AddDbContext<AppDbContext>(options =>
+//{
+//    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+//    //options.UseSqlServer(connectionString);
+//    options.UseNpgsql(connectionString);
+//});
+
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    //options.UseSqlServer(connectionString);
+
+    // Ki?m tra xem connection string c? ph?i l? d?ng URI (c?a Render) kh?ng
+    // D?u hi?u: B?t ??u b?ng "postgres://"
+    if (connectionString != null && connectionString.StartsWith("postgres://"))
+    {
+        try
+        {
+            var databaseUri = new Uri(connectionString);
+            var userInfo = databaseUri.UserInfo.Split(':');
+
+            // Chuy?n ??i sang ??nh d?ng chu?n c?a Npgsql
+            // L?u ?: Render y?u c?u SSL, n?n c?n SslMode=Require v? Trust Server Certificate=true
+            connectionString = $"Host={databaseUri.Host};Port={databaseUri.Port};Database={databaseUri.AbsolutePath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};SslMode=Require;Trust Server Certificate=true;";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"L?i khi parse connection string c?a Render: {ex.Message}");
+            // C? th? throw ho?c ?? nguy?n ?? n? b?o l?i g?c
+        }
+    }
+
     options.UseNpgsql(connectionString);
 });
 
