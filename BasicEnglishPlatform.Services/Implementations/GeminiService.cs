@@ -36,7 +36,7 @@ namespace BasicEnglishPlatform.Services.Implementations
                 {
                 new
                 {
-                    parts = new[] { new { text = question } }
+                    parts = new[] { new { text = "Bạn là trợ ý AI cho nền tảng học tiếng anh, hãy trả lời chi tiết cho hỏi sau:" + question } }
                 }
             }
             };
@@ -116,17 +116,33 @@ namespace BasicEnglishPlatform.Services.Implementations
             if (string.IsNullOrEmpty(_apiKey))
                 throw new Exception("Chưa cấu hình API Key.");
 
+            string[] levels = new[] { "Beginner", "Intermediate", "Advanced" };
+            var random = new Random();
+            string level = levels[random.Next(levels.Length)];
+
             // 1. Prompt Engineering: Ép AI trả về JSON chuẩn
             string prompt = $@"
-        Tạo 1 câu hỏi trắc nghiệm tiếng Anh về chủ đề: {topic}.
-        Yêu cầu trả về định dạng JSON thô (Raw JSON), không dùng Markdown (không dùng ```json).
-        Cấu trúc:
-        {{
-            ""question"": ""Câu hỏi tiếng Anh"",
-            ""options"": [""A"", ""B"", ""C"", ""D""],
-            ""correctAnswer"": ""Đáp án đúng (chép y nguyên từ mảng options)"",
-            ""explanation"": ""Giải thích ngắn gọn bằng tiếng Việt""
-        }}";
+            Bạn là AI chuyên tạo câu hỏi tiếng Anh. Hãy tạo NGẪU NHIÊN 1 câu hỏi trắc nghiệm tiếng Anh theo chủ đề: {topic}.
+            Độ khó: {level}
+
+            Hãy đảm bảo:
+            - Câu hỏi phải dựa trên độ khó:
+                - Beginner: câu ngắn, từ vựng phổ biến, không cấu trúc phức tạp
+                - Intermediate: câu dài hơn, có ngữ pháp đa dạng
+                - Advanced: có idioms, phrasal verbs hoặc cấu trúc nâng cao
+            - Luôn tạo ngẫu nhiên, không lặp lại mẫu cũ
+            - Đáp án bằng tiếng Anh
+            - Giải thích ngắn bằng tiếng Việt
+            - Trả về JSON thuần, không markdown
+
+            Cấu trúc JSON bắt buộc:
+            {{
+                ""question"": ""Câu hỏi tiếng Anh"",
+                ""options"": [""A"", ""B"", ""C"", ""D""],
+                ""correctAnswer"": ""Đáp án đúng (chép từ options)"",
+                ""explanation"": ""Giải thích ngắn gọn bằng tiếng Việt""
+            }}
+            ";
 
             var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={_apiKey}";
 
